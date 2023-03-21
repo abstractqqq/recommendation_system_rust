@@ -10,4 +10,5 @@ This repo is just for my own learning on the subject of recommendation systems a
 ### References:
 
 Perfect lecture for this: https://www.youtube.com/watch?v=ypZdwetUhCs&t=484s
+
 Informative, but bad for actual code: https://towardsdatascience.com/recommendation-system-matrix-factorization-d61978660b4b
