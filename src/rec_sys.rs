@@ -1,4 +1,4 @@
-use ndarray::{Axis, Array1, Array2, ArrayView1, ArrayView2};
+use ndarray::{Axis, Array1, Array2, ArrayView2};
 use ndarray_rand::RandomExt;
 use ndarray_rand::rand_distr::Uniform;
 
@@ -99,12 +99,12 @@ impl RecEngine {
                     // This is the i-th user. Need to rate the j-th movie.
                     // Computed weighted average
                     // This returns a tuple (Sum weight * rating, Sum of all weights as a normalizing factor)
-                    let weighted_sum_temp = self.get_top_k_sim_with_rating(i, self.k, j)
+                    let weighted_avg_temp = self.get_top_k_sim_with_rating(i, self.k, j)
                         .into_iter().fold((0.,0.), |acc, s| {
                             (acc.0 + s.0 * self.rating[[s.1,j]], acc.1 + s.0)
                         });
                     // If somehow the weighted_rating is < 0, then keep mask_value
-                    pred[[i,j]] = (weighted_sum_temp.0 / weighted_sum_temp.1).max(self.mask_value);
+                    pred[[i,j]] = (weighted_avg_temp.0 / weighted_avg_temp.1).max(self.mask_value);
                 }
             }
         }
@@ -119,31 +119,35 @@ impl RecEngine {
     /// num_iters: number of iterations
     /// threshold: convergence threshold
     /// mask_value: the value you used for indicating missing values in y
+    /// returns: will always return something
     pub fn get_prediction_mf(&self, K:usize, alpha:f64, reg_l2:f64, num_iters:usize, threshold:f64
-    ) -> Option<(Array2<f64>, Array2<f64>)> {
+    ) -> (Array2<f64>, Array2<f64>) {
         let count = self.mask.sum();
-        if count < 0. {
-            // error. There is not a single rating.
-            return None
-        }
-    
+        
+        let epsilon:f64 = 0.001;
+        let mut current_err:f64 = 0.;
         let (U, M) = self.rating.dim(); // U: user count, M: movie count / Item count
         let mut u:Array2<f64> = Array2::random((U, K),Uniform::new(0., 1.));
         let mut v:Array2<f64> = Array2::random((M, K),Uniform::new(0., 1.));
         let scale_factor:f64 = alpha / count;
         let scale_reg:f64 = alpha * reg_l2 * 0.5;
-    
-        let mut exit_mode:bool = false; // end of iteration. No convergence.
+        if count < 0. {
+            // error. There is not a single filled rating. return initial values
+            return (u,v)
+        }
         for i in 0..num_iters {
     
             let (delta, err) = self.l2_cost(&u, &v, reg_l2, &count);
+            let change_in_err:f64 = (current_err - err).abs();
+            current_err = err;
             //println!("Step {}, error: {}", i+1, err);
             if err < threshold { // error needs to be normalized, err/count is the true average error.
-                exit_mode = true; // Converges. Break to exit.
                 println!("Converged at iteration {}, with error: {}", i+1, err);
-                break
+                return (u , v)
+            } else if change_in_err < epsilon {
+                println!("Error improvement is {}, which is smaller than {}, at iteration {}. ", change_in_err, epsilon, i+1,);
+                return (u , v)       
             }
-            // Can try multithreading here. But maybe not worth it.
             let scaled_delta:Array2<f64> = scale_factor * delta;
             let u_change:Array2<f64> = scaled_delta.dot(&v) - scale_reg * &u;
             let v_change:Array2<f64> = scaled_delta.t().dot(&u) - scale_reg * &v;
@@ -152,12 +156,9 @@ impl RecEngine {
     
         }
     
-        if exit_mode {
-            Some((u, v))
-        } else {// Print
-            println!("Failed to reach threshold {} in {} iterations.", threshold, num_iters );
-            None
-        }
+        println!("Finished running {} iterations. Current error is {}, which is > the given threshold {}.", num_iters, current_err, threshold);
+        println!("The algorithm is still improving more than {} per step. It is recommended that you add more iterations or lower the error threshold.", epsilon);
+        (u,v)
     
     }
 

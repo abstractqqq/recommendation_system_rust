@@ -22,16 +22,7 @@ fn main() {
     // println!("Similar to User 1 and have rated movie 3:\n {:?}", r.get_top_k_sim_with_rating(0, 3, 2));
     println!("Prediction (Cosine): {:?}", r.get_prediction_cosine());
 
-    let result = r.get_prediction_mf(4, 0.1, 0.002,5000, 0.1);
-    match result {
-        Some((p,q)) => {
-            //println!("P is {}", p);
-            //println!("Q is {}", q);
-            println!("Prediction (MF) {}", p.dot(&q.t()));
-        },
-        _ => {
-            print!("Failed to find factorization");
-        }
-    }
+    let (p,q):(Array2<f64>, Array2<f64>) = r.get_prediction_mf(4, 0.1, 0.002,5000, 0.1);
+    println!("Prediction (MF) {}", p.dot(&q.t()));
 
 }
