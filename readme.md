@@ -5,7 +5,7 @@ This repo is just for my own learning on the subject of recommendation systems a
 ## Some Goals:
 
 1. Matrix factorization technique with regularization. (Done)
-2. Shifted cosine similarity (Not yet).
+2. Shifted cosine similarity (Done).
 
 ### References:
 
