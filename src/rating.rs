@@ -20,5 +20,5 @@ impl Rating {
             stars: stars,
             utc: Utc::now()
         }
-    }   
+    }
 }

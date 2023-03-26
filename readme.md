@@ -13,7 +13,7 @@ This repo is just for my own learning on the subject of recommendation systems a
     4. Create user simulation that makes sense. 
     5. Check the result of the each recommendation technique against simulated user behavior.
     6. See if we can combine MF and Centered cosine similarity to create better recommendation.
-    7. Build a frontend of a fake site. 
+    7. Make everything work from command line. Then build a frontend of a fake site. 
 
 ### References:
 
