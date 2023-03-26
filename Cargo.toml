@@ -6,5 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+# nohash-hasher = "0.2.0"
+chrono = "0.4.24"
 ndarray = { version="0.15.6", features = ["matrixmultiply-threading"]}
 ndarray-rand = "0.14.0"
