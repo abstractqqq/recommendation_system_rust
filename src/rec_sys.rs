@@ -4,6 +4,11 @@ use ndarray_rand::rand_distr::Uniform;
 
 // WILL SOON BE UNDER RECONSTRUCTION
 
+pub enum InitStrategy {
+    MinMax((f32, f32)), // a uniform dist from min to max
+    Constant(f32)
+}
+
 pub struct RecEngine {
     rating:Array2<f32>,
     mask:Array2<f32>, // ideally, should be sparse
@@ -121,15 +126,25 @@ impl RecEngine {
     /// threshold: convergence threshold
     /// mask_value: the value you used for indicating missing values in y
     /// returns: will always return something
-    pub fn get_prediction_mf(&self, K:usize, alpha:f32, reg_l2:f32, num_iters:usize, threshold:f32
+    pub fn get_prediction_mf(&self, K:usize, alpha:f32, reg_l2:f32, num_iters:usize, threshold:f32, init:InitStrategy
     ) -> (Array2<f32>, Array2<f32>) {
         let count = self.mask.sum();
-        
         let epsilon:f32 = 0.001;
         let mut current_err:f32 = 0.;
         let (U, M) = self.rating.dim(); // U: user count, M: movie count / Item count
-        let mut u:Array2<f32> = Array2::random((U, K),Uniform::new(0., 1.));
-        let mut v:Array2<f32> = Array2::random((M, K),Uniform::new(0., 1.));
+        
+        let mut u:Array2<f32>;
+        let mut v:Array2<f32>;
+        match init {
+            InitStrategy::Constant(f) => {
+                u = Array2::from_elem((U,K), f);
+                v = Array2::from_elem((M,K), f);
+            }
+            InitStrategy::MinMax((min, max)) => {
+                u = Array2::random((U, K),Uniform::new(min, max));
+                v = Array2::random((M, K),Uniform::new(min, max));
+            }
+        }
         let scale_factor:f32 = alpha / count;
         let scale_reg:f32 = alpha * reg_l2 * 0.5;
         if count < 0. {

@@ -1,5 +1,5 @@
 mod rec_sys;
-use rec_sys::{RecEngine};
+use rec_sys::{RecEngine, InitStrategy};
 mod rating;
 // use chrono::prelude::*;
 use ndarray::prelude::*;
@@ -24,7 +24,8 @@ fn main() {
     // println!("Similar to User 1 and have rated movie 3:\n {:?}", r.get_top_k_sim_with_rating(0, 3, 2));
     println!("Prediction (Cosine): {:?}", r.get_prediction_cosine());
 
-    let (p,q):(Array2<f32>, Array2<f32>) = r.get_prediction_mf(4, 0.1, 0.002,5000, 0.1);
+    let (p,q):(Array2<f32>, Array2<f32>) = r.get_prediction_mf(4, 0.1, 0.002,5000, 0.1
+        , InitStrategy::MinMax((0., 1.)));
     println!("Prediction (MF) {}", p.dot(&q.t()));
 
 
